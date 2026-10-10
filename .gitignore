@@ -2,3 +2,21 @@ venv/
 __pycache__/
 *.pyc
 .env
+# Entorno virtual de Python
+venv/
+.venv/
+
+# Archivos temporales de Python
+__pycache__/
+*.py[cod]
+
+# Variables de entorno y secretos
+.env
+.env.*
+
+# Configuración local de herramientas
+.vscode/
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
