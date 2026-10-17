@@ -1,51 +1,29 @@
-# Este archivo contiene la clase RouterDetector, que se encarga de detectar servicios en un router dado su IP.
+"""Detecta servicios de administración en el router (puertos TCP)."""
 import socket
+from concurrent.futures import ThreadPoolExecutor
+
+from ..seguridad import exigir_ip_privada
+
+PUERTOS = {"http": 80, "https": 443, "ssh": 22}
 
 
-class RouterDetector:#esta clase se encarga de detectar servicios en un router dado su IP
-
+class RouterDetector:
     def __init__(self, ip):
-        self.ip = ip
+        # Solo se sondean equipos de la red local.
+        self.ip = exigir_ip_privada(ip)
 
     def comprobar_puerto(self, puerto, timeout=1):
-        """
-        Comprueba si un puerto TCP del gateway está disponible.
-        """
-
         try:
-            conexion = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            conexion.settimeout(timeout)
-
-            resultado = conexion.connect_ex((self.ip, puerto))
-
-            conexion.close()
-
-            return resultado == 0
-
-        except Exception:
+            with socket.create_connection((self.ip, puerto), timeout=timeout):
+                return True
+        except OSError:
             return False
 
     def detectar_servicios(self):
-        """
-        Detecta algunos servicios de administración comunes.
-        """
-
-        servicios = {
-            "http": self.comprobar_puerto(80),
-            "https": self.comprobar_puerto(443),
-            "ssh": self.comprobar_puerto(22),
-        }
-
-        return servicios
+        """Comprueba los puertos en paralelo (antes: uno tras otro, hasta 3 s)."""
+        with ThreadPoolExecutor(max_workers=len(PUERTOS)) as pool:
+            futuros = {n: pool.submit(self.comprobar_puerto, p) for n, p in PUERTOS.items()}
+            return {nombre: f.result() for nombre, f in futuros.items()}
 
     def analizar(self):
-        """
-        Realiza un análisis básico del gateway.
-        """
-
-        servicios = self.detectar_servicios()
-
-        return {
-            "ip": self.ip,
-            "servicios": servicios
-        }
+        return {"ip": self.ip, "servicios": self.detectar_servicios()}

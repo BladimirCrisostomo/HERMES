@@ -1,0 +1,67 @@
+texto,intencion
+mi internet esta muy lento,diagnostico_latencia
+tengo mucho lag cuando juego,diagnostico_latencia
+las paginas tardan demasiado en cargar,diagnostico_latencia
+el video se queda cargando todo el tiempo,diagnostico_latencia
+hay retraso en mis videollamadas,diagnostico_latencia
+la conexion va muy lenta hoy,diagnostico_latencia
+se traba todo cuando navego,diagnostico_latencia
+siento que el internet esta pesado,diagnostico_latencia
+mi ping esta altisimo,diagnostico_latencia
+las descargas van super lentas,diagnostico_latencia
+netflix se congela y tarda en cargar,diagnostico_latencia
+el juego en linea se atrasa mucho,diagnostico_latencia
+no tengo internet,diagnostico_conectividad
+se cayo la conexion,diagnostico_conectividad
+no hay conexion a internet,diagnostico_conectividad
+mi computadora no se conecta a la red,diagnostico_conectividad
+perdi el internet de repente,diagnostico_conectividad
+no puedo entrar a ninguna pagina,diagnostico_conectividad
+dice que no hay red,diagnostico_conectividad
+el internet no funciona,diagnostico_conectividad
+estoy sin internet desde hace una hora,diagnostico_conectividad
+no logro conectarme al internet,diagnostico_conectividad
+se fue el internet,diagnostico_conectividad
+sin conexion en mi laptop,diagnostico_conectividad
+quiero revisar mi red,diagnostico_general
+haz un diagnostico de mi red,diagnostico_general
+comprueba como esta mi conexion,diagnostico_general
+revisa mi internet por favor,diagnostico_general
+analiza mi red,diagnostico_general
+quiero saber como esta mi conexion,diagnostico_general
+puedes verificar si todo esta bien con la red,diagnostico_general
+hazme una revision completa de la red,diagnostico_general
+checa el estado de mi internet,diagnostico_general
+dame un reporte de mi conexion,diagnostico_general
+en que canal debo poner mi wifi,analizar_wifi
+el wifi esta saturado de redes vecinas,analizar_wifi
+que canal wifi es mejor,analizar_wifi
+analiza las redes wifi cercanas,analizar_wifi
+mi senal inalambrica se interrumpe,analizar_wifi
+hay interferencia en mi wifi,analizar_wifi
+recomiendame un canal para mi router,analizar_wifi
+el wifi se corta cuando estoy lejos del router,analizar_wifi
+quiero optimizar mi red inalambrica,analizar_wifi
+cual es el mejor canal para mi wifi,analizar_wifi
+que router tengo,info_router
+dame informacion de mi router,info_router
+quiero ver los datos de mi router,info_router
+cual es la direccion de mi router,info_router
+que puertos tiene abiertos mi router,info_router
+muestrame la informacion de mi puerta de enlace,info_router
+detecta mi router,info_router
+cual es el gateway de mi red,info_router
+que servicios tiene mi router,info_router
+identifica el modelo de mi router,info_router
+cuantas personas estan en mi red,listar_dispositivos
+que aparatos hay conectados,listar_dispositivos
+quien esta en mi wifi,listar_dispositivos
+muestrame los equipos de mi red,listar_dispositivos
+cuantos celulares estan conectados,listar_dispositivos
+hay alguien robandome el internet,listar_dispositivos
+lista los dispositivos de mi red,listar_dispositivos
+cuantos aparatos usan mi internet,listar_dispositivos
+quiero ver quien esta conectado,listar_dispositivos
+dime cuantos usuarios hay conectados,listar_dispositivos
+detecta los equipos de mi red local,listar_dispositivos
+alguien mas esta usando mi conexion,listar_dispositivos

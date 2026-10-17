@@ -1,146 +1,48 @@
+"""Investiga qué funciones del router están confirmadas y cuáles no.
 
-from detector import RouterDetector
-from web_info import RouterWebInfo
+Solo recopila evidencias; no modifica nada en el router.
+"""
+from . import capabilities as cap
+from .detector import RouterDetector
+from .web_info import RouterWebInfo
 
 
 class RouterCapabilityDetector:
-    """
-    Investiga qué funciones del router están confirmadas,
-    cuáles tienen indicios y cuáles siguen sin verificarse.
-    """
-
     def __init__(self, ip):
         self.ip = ip
         self.detector = RouterDetector(ip)
         self.web = RouterWebInfo(ip)
 
-    def detectar(self):
-        """
-        Recopila evidencias sin modificar la configuración.
-        """
-
-        resultado = {
-            "ip": self.ip,
-            "capacidades": {},
-            "evidencias": {},
-            "informacion": {}
+    def _probar_web(self, protocolo, servicios, resultado):
+        nombre = f"administracion_{protocolo}"
+        if not servicios.get(protocolo):
+            resultado["capacidades"][nombre] = cap.NO_DETECTADA
+            return
+        datos = self.web.consultar(protocolo)
+        if "error" in datos:
+            # El puerto responde pero la consulta falló: no afirmamos nada más.
+            resultado["capacidades"][nombre] = cap.NO_VERIFICADA
+            resultado["evidencias"][protocolo] = {"error": datos["error"]}
+            return
+        resultado["capacidades"][nombre] = cap.CONFIRMADA
+        resultado["evidencias"][protocolo] = {
+            "codigo": datos["codigo"], "servidor": datos["servidor"],
         }
+        if protocolo == "http":
+            resultado["informacion"].update({
+                "servidor_web": datos["servidor"],
+                "fabricante_detectado": datos["fabricante_detectado"],
+                "ruta_login": datos["ruta_login"],
+            })
 
-        # 1. Comprobar los puertos de administración conocidos.
+    def detectar(self):
         servicios = self.detector.detectar_servicios()
-
-        resultado["evidencias"]["puertos"] = servicios
-
-        # 2. Investigar HTTP si el puerto está disponible.
-        if servicios.get("http"):
-            datos_http = self.web.consultar("http")
-
-            if "error" not in datos_http:
-                resultado["capacidades"]["administracion_http"] = (
-                    "confirmada"
-                )
-
-                resultado["informacion"]["servidor_web"] = (
-                    datos_http.get("servidor")
-                )
-
-                resultado["informacion"]["fabricante_detectado"] = (
-                    datos_http.get("fabricante_detectado")
-                )
-
-                resultado["informacion"]["ruta_login"] = (
-                    datos_http.get("ruta_login")
-                )
-
-                resultado["evidencias"]["http"] = {
-                    "codigo": datos_http.get("codigo"),
-                    "servidor": datos_http.get("servidor")
-                }
-
-            else:
-                resultado["capacidades"]["administracion_http"] = (
-                    "no_confirmada"
-                )
-
-                resultado["evidencias"]["http"] = {
-                    "error": datos_http["error"]
-                }
-
-        else:
-            resultado["capacidades"]["administracion_http"] = (
-                "no_detectada"
-            )
-
-        # 3. Investigar HTTPS si el puerto está disponible.
-        if servicios.get("https"):
-            datos_https = self.web.consultar("https")
-
-            if "error" not in datos_https:
-                resultado["capacidades"]["administracion_https"] = (
-                    "confirmada"
-                )
-
-                resultado["evidencias"]["https"] = {
-                    "codigo": datos_https.get("codigo")
-                }
-
-            else:
-                # El puerto responde, pero la consulta HTTPS falló.
-                # No afirmamos que HTTPS esté desactivado.
-                resultado["capacidades"]["administracion_https"] = (
-                    "no_verificada"
-                )
-
-                resultado["evidencias"]["https"] = {
-                    "error": datos_https["error"],
-                    "nota": (
-                        "El puerto responde, pero la consulta "
-                        "HTTPS no pudo completarse."
-                    )
-                }
-
-        else:
-            resultado["capacidades"]["administracion_https"] = (
-                "no_detectada"
-            )
-
-        # 4. Estas funciones requieren evidencia adicional.
-        # No asumimos que existen solo porque haya una web.
-        funciones_por_verificar = [
-            "obtener_clientes",
-            "cambiar_canal_wifi",
-            "bloquear_cliente",
-            "configurar_qos"
-        ]
-
-        for funcion in funciones_por_verificar:
-            resultado["capacidades"][funcion] = "no_verificada"
-
-        return resultado
-
-    def mostrar(self):
-        """
-        Presenta los resultados en la terminal.
-        """
-
-        resultado = self.detectar()
-
-        print("=== DETECTOR DE CAPACIDADES DE HERMES ===")
-        print(f"Router: {resultado['ip']}")
-
-        print("\n--- INFORMACIÓN DETECTADA ---")
-
-        for nombre, valor in resultado["informacion"].items():
-            print(f"{nombre}: {valor}")
-
-        print("\n--- CAPACIDADES ---")
-
-        for nombre, estado in resultado["capacidades"].items():
-            print(f"{nombre}: {estado}")
-
-        print("\n--- EVIDENCIAS DE RED ---")
-
-        for nombre, evidencia in resultado["evidencias"].items():
-            print(f"{nombre}: {evidencia}")
-
+        resultado = {
+            "ip": self.ip, "capacidades": {}, "informacion": {},
+            "evidencias": {"puertos": servicios},
+        }
+        for protocolo in ("http", "https"):
+            self._probar_web(protocolo, servicios, resultado)
+        for funcion in cap.FUNCIONES_POR_VERIFICAR:
+            resultado["capacidades"][funcion] = cap.NO_VERIFICADA
         return resultado

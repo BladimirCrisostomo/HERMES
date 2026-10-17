@@ -1,55 +1,56 @@
-#este archivo define la interfaz que deben implementar todos los routers compatibles con el sistema.
+"""Contratos que deben cumplir los adaptadores de router.
+
+La interfaz está dividida a propósito (README: 'separación entre diagnóstico
+y funciones que modifican la red'):
+
+  RouterReader     -> solo lectura. Es lo único que usa el diagnóstico.
+  RouterController -> además puede MODIFICAR el router. Nunca se llama
+                      directamente: pasa por RouterManager / GuardianRouter,
+                      que validan, piden confirmación, verifican y registran.
+
+Formato esperado de obtener_clientes(): lista de dicts con las claves
+  mac, ip, nombre, consumo_kbps, bloqueado (bool), limite_kbps (int | None)
+Formato de obtener_configuracion_wifi(): dict con al menos 'canal' (int).
+"""
 from abc import ABC, abstractmethod
 
 
-class RouterInterface(ABC):
+class RouterReader(ABC):
+    @abstractmethod
+    def conectar(self): ...
 
     @abstractmethod
-    def conectar(self):
-        """Establece conexión con el router."""
-        pass
+    def desconectar(self): ...
 
     @abstractmethod
-    def desconectar(self):
-        """Cierra la conexión con el router."""
-        pass
-
-    @abstractmethod
-    def obtener_informacion(self):
-        """Obtiene información básica del router."""
-        pass
+    def obtener_informacion(self): ...
 
     @abstractmethod
     def obtener_capacidades(self):
-        """Obtiene las capacidades disponibles del router."""
-        pass
+        """dict {nombre_capacidad: 'confirmada' | 'no_verificada' | 'no_detectada'}"""
 
     @abstractmethod
-    def obtener_clientes(self):
-        """Obtiene los dispositivos conectados."""
-        pass
+    def obtener_clientes(self): ...
 
     @abstractmethod
-    def obtener_configuracion_wifi(self):
-        """Obtiene la configuración Wi-Fi."""
-        pass
+    def obtener_configuracion_wifi(self): ...
+
+
+class RouterController(RouterReader):
+    @abstractmethod
+    def cambiar_canal(self, canal): ...
 
     @abstractmethod
-    def cambiar_canal(self, canal):
-        """Cambia el canal Wi-Fi."""
-        pass
+    def bloquear_cliente(self, mac): ...
 
     @abstractmethod
-    def bloquear_cliente(self, identificador):
-        """Bloquea un dispositivo."""
-        pass
+    def desbloquear_cliente(self, mac): ...
 
     @abstractmethod
-    def desbloquear_cliente(self, identificador):
-        """Desbloquea un dispositivo."""
-        pass
+    def limitar_cliente(self, mac, kbps): ...
 
     @abstractmethod
-    def configurar_qos(self, configuracion):
-        """Configura reglas de calidad de servicio."""
-        pass
+    def quitar_limite(self, mac): ...
+
+    @abstractmethod
+    def reiniciar(self): ...

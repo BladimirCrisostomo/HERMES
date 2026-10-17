@@ -1,22 +1,24 @@
-venv/
-__pycache__/
-*.pyc
-.env
-# Entorno virtual de Python
+# Entorno virtual
 venv/
 .venv/
 
-# Archivos temporales de Python
+# Python
 __pycache__/
 *.py[cod]
+.pytest_cache/
 
-# Variables de entorno y secretos
+# Secretos y configuración local
 .env
 .env.*
-
-# Configuración local de herramientas
+!.env.example
 .vscode/
+.idea/
 
-# Archivos del sistema
+# Generados por HERMES (se recrean con `python -m scripts.entrenar`)
+logs/
+models/*.joblib
+models/*.json
+
+# Sistema
 .DS_Store
 Thumbs.db

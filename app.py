@@ -1,72 +1,75 @@
-#Codigo principal de HERMES solo personal autorizado XD
+"""HERMES - Sistema inteligente de administración y diagnóstico de redes (consola).
 
-from src.nlp import identificar_intencion #funcion para identificar la intencion del usuario
-from src.network import obtener_datos_red #funcion para obtener los datos de la red con diagnostico de latencia y perdida de paquetes
-from src.diagnostico import diagnosticar, recomendar #funciones para diagnosticar y recomendar acciones basadas en los resultados del diagnostico
+Uso:  python app.py
+"""
+from src import config
+from src.motor import procesar_consulta
+
+SALIR = {"salir", "exit", "quit", "q"}
 
 
-print("=== HERMES ===")
-print("Sistema Inteligente de Administración y Diagnóstico de Redes")
-print()
+def mostrar(r):
+    print(f"\nIntención detectada: {r.intencion}\n")
 
-pregunta = input("¿Qué problema tienes con tu red?: ")
+    if r.medicion is not None:
+        m, d = r.medicion, r.diagnostico
+        print(f"Equipo:   {r.red.get('equipo')}")
+        print(f"IP local: {r.red.get('ip_local')}")
+        print(f"Router:   {r.red.get('gateway') or 'no detectado'}")
+        print(f"Internet: {'OK' if m.internet.conexion else 'SIN RESPUESTA'}", end="")
+        if m.internet.conexion:
+            print(f" | latencia {m.internet.latencia} ms | jitter {m.internet.jitter} ms"
+                  f" | pérdida {m.internet.perdida}%", end="")
+        print()
+        if m.tiene_gateway and m.gateway.conexion:
+            print(f"Router:   latencia {m.gateway.latencia} ms | pérdida {m.gateway.perdida}%")
+        print(f"\nDiagnóstico:    {d.mensaje}")
+        print(f"Recomendación:  {d.recomendacion}")
+        origen = "modelo de ML" if d.origen == "ml" else "reglas"
+        extra = f" (confianza {d.confianza:.0%})" if d.confianza is not None else ""
+        print(f"\n[Fuente: {origen}{extra}]")
+    elif r.intencion == "listar_dispositivos" and r.datos.get("dispositivos"):
+        print(r.mensaje, "\n")
+        print(f"{'IP':<16}{'MAC':<19}{'Fabricante':<18}{'Nombre':<24}Nota")
+        for d in r.datos["dispositivos"]:
+            nota = ", ".join(n for n, activo in (
+                ("este equipo", d["es_este_equipo"]), ("router", d["es_gateway"]),
+                ("MAC privada", d["mac_aleatoria"])) if activo)
+            print(f"{d['ip']:<16}{(d['mac'] or '?'):<19}{(d['fabricante'] or '-'):<18}"
+                  f"{(d['nombre'] or '-')[:22]:<24}{nota}")
+    elif r.intencion == "info_router" and r.datos:
+        print(r.mensaje)
+        for k, v in r.datos.get("informacion", {}).items():
+            print(f"  {k}: {v}")
+        for k, v in r.datos.get("capacidades", {}).items():
+            print(f"  {k}: {v}")
+    elif r.intencion == "analizar_wifi" and r.datos.get("correcto"):
+        print(r.mensaje)
+        for canal, cant in r.datos["redes_por_canal"].items():
+            print(f"  Canal {canal:2}: {'#' * cant} {cant}")
+    else:
+        print(r.mensaje)
 
-intencion = identificar_intencion(pregunta)#esto llama a la funcion identificar_intencion para determinar la intencion del usuario
 
-print()
-print("Intención detectada:", intencion)
-print()
+def main():
+    config.configurar_logging()
+    print("=== HERMES ===")
+    print("Sistema Inteligente de Administración y Diagnóstico de Redes")
+    print("(escribe 'salir' para terminar)\n")
+    while True:
+        try:
+            pregunta = input("¿Qué problema tienes con tu red?: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            break
+        if pregunta.lower() in SALIR:
+            break
+        if not pregunta:
+            continue
+        print("\nAnalizando tu red, un momento...")
+        mostrar(procesar_consulta(pregunta))
+        print()
 
-if intencion == "diagnostico_latencia":
-    
-    hostname, ip_local, conexion, latencia, perdida = obtener_datos_red()#funcion para obtener los datos de la red con diagnostico de latencia y perdida de paquetes
 
-    resultado = diagnosticar(latencia, perdida, conexion)
-    recomendacion = recomendar(latencia, perdida, conexion)
-
-    print("Nombre del equipo:", hostname)
-    print("IP local:", ip_local)
-    print("Conexión:", "estable" if conexion else "sin conexión")
-    print("Latencia promedio:", latencia, "ms")
-    print("Pérdida de paquetes:", perdida, "%")
-    print()
-    print("Diagnóstico:", resultado)
-    print("Recomendación:", recomendacion)
-
-elif intencion == "diagnostico_conectividad":
-
-    hostname, ip_local, conexion, latencia, perdida = obtener_datos_red()
-
-    resultado = diagnosticar(latencia, perdida, conexion)
-    recomendacion = recomendar(latencia, perdida, conexion)
-
-    print("Nombre del equipo:", hostname)
-    print("IP local:", ip_local)
-    print("Conexión:", "OK" if conexion else "ERROR")
-    print()
-    print("Diagnóstico:", resultado)
-    print("Recomendación:", recomendacion)
-
-elif intencion == "diagnostico_general":
-
-    hostname, ip_local, conexion, latencia, perdida = obtener_datos_red()#obtener los datos de la red con diagnostico de latencia y perdida de paquetes
-
-    resultado = diagnosticar(latencia, perdida, conexion)
-    recomendacion = recomendar(latencia, perdida, conexion)
-
-    print("Nombre del equipo:", hostname)
-    print("IP local:", ip_local)
-    print("Conexión:", "estable" if conexion else "sin conexión")
-    print("Latencia promedio:", latencia, "ms")
-    print("Pérdida de paquetes:", perdida, "%")
-    print()
-    print("Diagnóstico:", resultado)
-    print("Recomendación:", recomendacion)
-
-else:
-
-    print("No pude identificar el problema.")
-    print("Prueba con frases como:")
-    print("- Mi internet está lento")
-    print("- No tengo internet")
-    print("- Quiero revisar mi red")
+if __name__ == "__main__":
+    main()
