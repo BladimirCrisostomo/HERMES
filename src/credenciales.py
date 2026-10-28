@@ -29,11 +29,18 @@ class Credenciales:
         return f"Credenciales(usuario={self.usuario!r}, contrasena=***)"
 
 
-def pedir_credenciales(ip, usuario_defecto="admin", entrada=input, clave=getpass.getpass):
-    """Pregunta usuario y contraseña por consola (la contraseña no se muestra)."""
+def pedir_credenciales(ip, usuario_defecto="admin", entrada=input, clave=getpass.getpass,
+                       pedir_usuario=True):
+    """Pregunta usuario y contraseña por consola (la contraseña no se muestra).
+
+    Con pedir_usuario=False solo se pide la contraseña (routers cuyo panel no tiene usuario,
+    como el Mercusys MW306R).
+    """
     exigir_ip_privada(ip)
-    usuario = entrada(f"Usuario del router {ip} [{usuario_defecto}]: ").strip() or usuario_defecto
-    contrasena = clave("Contraseña (no se mostrará): ")
+    usuario = usuario_defecto
+    if pedir_usuario:
+        usuario = entrada(f"Usuario del router {ip} [{usuario_defecto}]: ").strip() or usuario_defecto
+    contrasena = clave("Contraseña del panel del router (no se mostrará): ")
     if not contrasena:
         raise ValueError("La contraseña no puede estar vacía.")
     return Credenciales(usuario, contrasena)

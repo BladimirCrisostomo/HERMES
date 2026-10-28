@@ -12,8 +12,9 @@ LIMITE_MAX_KBPS = 1_000_000
 
 
 def _validar_canal(canal):
-    if isinstance(canal, bool) or not isinstance(canal, int) or not 1 <= canal <= 13:
-        raise ValueError("El canal Wi-Fi debe ser un entero entre 1 y 13.")
+    """0 = automático (hace falta para revertir a como estaba); 1-13 = canal fijo."""
+    if isinstance(canal, bool) or not isinstance(canal, int) or not 0 <= canal <= 13:
+        raise ValueError("El canal Wi-Fi debe ser un entero entre 0 (automático) y 13.")
     return canal
 
 

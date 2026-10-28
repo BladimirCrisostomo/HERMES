@@ -32,6 +32,13 @@ class TestCredenciales(unittest.TestCase):
         c = pedir_credenciales("192.168.1.1", entrada=lambda _: "", clave=lambda _: "pw12345")
         self.assertEqual((c.usuario, c.contrasena), ("admin", "pw12345"))
 
+    def test_solo_contrasena_no_pregunta_el_usuario(self):
+        def no_debe_llamarse(_):
+            raise AssertionError("no debía pedir el usuario")
+        c = pedir_credenciales("192.168.1.1", entrada=no_debe_llamarse, clave=lambda _: "pw12345",
+                               pedir_usuario=False)
+        self.assertEqual((c.usuario, c.contrasena), ("admin", "pw12345"))
+
     def test_contrasena_vacia_se_rechaza(self):
         with self.assertRaises(ValueError):
             pedir_credenciales("192.168.1.1", entrada=lambda _: "x", clave=lambda _: "")

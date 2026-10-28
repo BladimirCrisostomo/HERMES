@@ -2,357 +2,158 @@
 
 ### Sistema Inteligente de Administración y Diagnóstico de Redes
 
-## Descripción
+Proyecto de Inteligencia Artificial (metodología ABP). El usuario describe un problema de red en lenguaje natural, HERMES mide la red, clasifica el problema con Machine Learning y responde con un diagnóstico y recomendaciones.
 
-HERMES es un proyecto de Inteligencia Artificial desarrollado bajo la metodología de Aprendizaje Basado en Proyectos (ABP).
+> *"Mi Internet está muy lento y algunas páginas tardan demasiado en cargar."*
 
-El objetivo del proyecto es desarrollar un sistema inteligente capaz de analizar información relacionada con una red de computadoras, identificar posibles problemas y proporcionar un diagnóstico utilizando Inteligencia Artificial, aprendizaje automático y procesamiento de lenguaje natural.
+## Qué hace hoy
 
-El sistema permitirá que el usuario interactúe utilizando lenguaje natural para describir un problema de red. Por ejemplo:
+| Función | Cómo funciona |
+|---|---|
+| Entender la consulta | Palabras clave (sin acentos, palabras completas) + clasificador TF-IDF/regresión logística para frases nuevas |
+| Medir la red | `ping` a Internet **y** al router → latencia, jitter y pérdida; funciona en Windows, Linux y macOS |
+| Diagnosticar | Árbol de decisión (scikit-learn) con 5 variables; si duda o falta información usa reglas de respaldo |
+| Distinguir la causa | Compara router vs. Internet: separa "falla tu Wi-Fi/router" de "falla el proveedor" |
+| Analizar Wi-Fi | Escanea redes cercanas y sugiere el canal con menos interferencia (Windows y Linux) |
+| Contar dispositivos | "¿Cuántos usuarios hay en mi red?" → lista IP, MAC, fabricante y nombre, **sin contraseña** |
+| Conocer el router | Detecta puertos y portada web **sin iniciar sesión**, marcando qué capacidades están confirmadas |
+| Administrar el router | Bloquear, limitar velocidad, cambiar canal y reiniciar, con modos sugerir/confirmar/automático, protecciones y reversión (ver abajo) |
+| Interfaces | Consola (`app.py`) y **web estilo HUD** (`streamlit_app.py`): conecta el router con su contraseña, órdenes en lenguaje natural («bloquea el celular», «cambia el canal a 6»), modos sugerir/confirmar/automático y confirmación visual |
 
-> "Mi Internet está muy lento y algunas páginas tardan demasiado en cargar."
+## Interfaz web (Streamlit)
 
-A partir de esta solicitud, el sistema analizará la información proporcionada, identificará la posible intención del usuario y utilizará datos obtenidos de la red para generar un diagnóstico.
-
-Además del diagnóstico, el sistema podrá proporcionar recomendaciones básicas para ayudar al usuario a identificar y solucionar el problema.
-
----
-
-## Objetivo
-
-Desarrollar un sistema inteligente capaz de interpretar consultas relacionadas con problemas de redes, recopilar información de la conexión, analizar los datos mediante técnicas de aprendizaje automático y generar diagnósticos comprensibles para el usuario.
-
-El sistema busca combinar conceptos de:
-
-* Inteligencia Artificial.
-* Aprendizaje automático.
-* Procesamiento de lenguaje natural.
-* Administración de redes.
-* Análisis de datos.
-* Automatización.
-* Desarrollo de software.
-
-La finalidad es crear un prototipo funcional que demuestre cómo la Inteligencia Artificial puede utilizarse para apoyar tareas de diagnóstico y administración de redes.
-
----
-
-## Uso de Inteligencia Artificial
-
-La Inteligencia Artificial será utilizada como uno de los componentes principales del sistema.
-
-El sistema podrá:
-
-* Interpretar consultas escritas en lenguaje natural.
-* Identificar la intención del usuario.
-* Extraer información relevante de las consultas.
-* Clasificar posibles problemas de red.
-* Analizar datos obtenidos de la conexión.
-* Identificar patrones asociados con diferentes problemas.
-* Generar un diagnóstico basado en los datos disponibles.
-* Proporcionar recomendaciones de solución.
-* Generar respuestas en lenguaje natural.
-
-El aprendizaje automático será utilizado para entrenar un modelo capaz de relacionar diferentes características de una red con posibles estados o problemas.
-
-Por ejemplo, características como:
-
-* Latencia.
-* Pérdida de paquetes.
-* Tiempo de respuesta.
-* Disponibilidad de conexión.
-* Velocidad de transferencia.
-* Estado de determinados servicios.
-
-podrán utilizarse como datos de entrada para el análisis.
-
-La IA no tendrá control ilimitado sobre el equipo o la red. Las acciones que puedan modificar la configuración del sistema deberán estar controladas y validadas por la aplicación.
-
----
-
-# Arquitectura general
-
-```text
-                         USUARIO
-                            │
-                            ▼
-                  ┌─────────────────┐
-                  │ Lenguaje Natural│
-                  └────────┬────────┘
-                           │
-                           ▼
-                  ┌─────────────────┐
-                  │ Procesamiento de│
-                  │     consulta    │
-                  └────────┬────────┘
-                           │
-                           ▼
-              ┌──────────────────────────┐
-              │ Sistema de diagnóstico   │
-              │        inteligente       │
-              └────────────┬─────────────┘
-                           │
-              ┌────────────┴────────────┐
-              ▼                         ▼
-      ┌───────────────┐         ┌────────────────┐
-      │ Datos de red  │         │ Modelo de      │
-      │               │         │ Machine        │
-      │ Ping          │         │ Learning       │
-      │ Latencia      │         │                │
-      │ Paquetes      │         │ Clasificación  │
-      │ Conectividad  │         │ de problemas   │
-      └───────┬───────┘         └───────┬────────┘
-              │                         │
-              └────────────┬────────────┘
-                           ▼
-                  ┌─────────────────┐
-                  │   Diagnóstico   │
-                  └────────┬────────┘
-                           │
-                           ▼
-                  ┌─────────────────┐
-                  │ Recomendaciones │
-                  └─────────────────┘
+```bash
+streamlit run streamlit_app.py
 ```
 
----
+- **Panel lateral:** IP del router y contraseña del panel (con la que entras a `mwlogin.net`; este router no usa usuario). La contraseña no se muestra, no se guarda y el formulario se vacía al enviarlo. Hay un límite de 3 intentos seguidos (luego espera 30 s) para no golpear el login del router. **DEMO** abre un router simulado, ideal para presentar sin riesgo.
+- **Consola:** escribe o usa los accesos rápidos. Órdenes de ejemplo: «bloquea el celular», «desbloquea la tv», «cambia el canal a 6», «pon el canal en automático», «cuántos dispositivos hay». HERMES no bloquea «a todos», pide aclaración si el nombre es ambiguo y nunca ejecuta sin respetar el modo elegido.
+- **Dispositivos / Router:** botones para bloquear, desbloquear y cambiar canal; registro de acciones; capacidades confirmadas del router.
+- Si el login falla, el panel muestra un **diagnóstico técnico** (solo códigos y longitudes, sin contraseña) útil para depurar.
+- El panel solo escucha en `127.0.0.1`: otra persona de tu red no puede abrirlo para administrar tu router.
 
-# Componentes principales
+## Instalación y uso
 
-### Interfaz de usuario
+```bash
+python -m venv venv
+venv\Scripts\activate          # Windows   (Linux/macOS: source venv/bin/activate)
+pip install -r requirements.txt
 
-Permitirá al usuario introducir consultas relacionadas con problemas de red y visualizar los resultados del diagnóstico.
+python app.py                  # consola
+streamlit run streamlit_app.py # interfaz web
+```
 
-### Procesamiento de lenguaje natural
+La primera vez que se usa el diagnóstico, HERMES entrena el modelo solo (menos de 1 s). Para entrenarlo manualmente y ver sus métricas:
 
-Será responsable de analizar las consultas escritas por el usuario e identificar la intención y los datos relevantes de cada solicitud.
+```bash
+python -m scripts.entrenar
+```
 
-### Módulo de administración de red
-
-Se encargará de obtener información de la red y realizar diferentes pruebas, como:
-
-* Ping.
-* Latencia.
-* Pérdida de paquetes.
-* Comprobación de conectividad.
-* Información básica de la interfaz de red.
-
-### Módulo de Inteligencia Artificial
-
-Analizará los datos obtenidos de la red y utilizará un modelo de aprendizaje automático para identificar posibles problemas.
-
-### Módulo de diagnóstico
-
-Combinará la información obtenida de la red con los resultados del modelo de IA para generar un diagnóstico.
-
-### Módulo de recomendaciones
-
-Generará recomendaciones relacionadas con el problema detectado, explicando de forma sencilla qué podría estar ocurriendo y qué comprobaciones puede realizar el usuario.
-
----
-
-# Tecnologías
-
-| Área                              | Tecnología                         |
-| --------------------------------- | ---------------------------------- |
-| Lenguaje principal                | Python                             |
-| Inteligencia Artificial           | Scikit-learn                       |
-| Procesamiento de datos            | Pandas                             |
-| Procesamiento de lenguaje natural | Python + NLP                       |
-| Administración de red             | Herramientas y librerías de Python |
-| Interfaz                          | Streamlit                          |
-| Machine Learning                  | Modelos de clasificación           |
-| Control de versiones              | Git + GitHub                       |
-| Documentación                     | Markdown                           |
-
-> Las tecnologías podrán modificarse durante el desarrollo si se encuentra una alternativa que se adapte mejor a los requerimientos del proyecto.
-
----
-
-# Estructura del proyecto
+## Estructura
 
 ```text
 hermes/
-│
+├── app.py                    # interfaz de consola
+├── streamlit_app.py          # interfaz web (estilo HUD)
+├── .streamlit/config.toml    # tema oscuro; el panel solo escucha en 127.0.0.1
 ├── data/
-│   └── dataset.csv
-│
-├── models/
-│   └── modelo_diagnostico.pkl
-│
+│   ├── dataset.csv           # dataset sintético de entrenamiento (generado)
+│   ├── dataset_inicial.csv   # primer dataset de 20 filas (histórico)
+│   ├── intenciones.csv       # frases de ejemplo para el clasificador de intenciones
+│   └── mediciones_reales.csv # tus mediciones reales (opcional, se crea solo)
+├── models/                   # modelos entrenados (.joblib, se regeneran)
 ├── src/
-│   ├── diagnostico.py
-│   ├── machine_learning.py
-│   ├── network.py
-│   └── nlp.py
-│
-├── tests/
-│   └── test_diagnostico.py
-│
-├── app.py
+│   ├── motor.py              # orquesta: consulta -> mediciones -> diagnóstico
+│   ├── asistente.py          # órdenes en lenguaje natural y sesión con el router (sin Streamlit)
+│   ├── ui_tema.py            # tema HUD (CSS) y componentes HTML, todo con texto escapado
+│   ├── nlp.py                # identificación de intención
+│   ├── network.py            # ping multiplataforma (latencia, jitter, pérdida)
+│   ├── discovery.py          # IP local y gateway
+│   ├── diagnostico.py        # ML + reglas de respaldo + recomendaciones
+│   ├── machine_learning.py   # entrenamiento, evaluación y predicción
+│   ├── dispositivos.py       # descubrimiento de dispositivos de la LAN
+│   ├── politicas.py          # GuardianRouter: modos, protecciones, reversión
+│   ├── credenciales.py       # usuario/contraseña del router (nunca en logs)
+│   ├── seguridad.py          # validación de entradas y filtro de secretos
+│   ├── config.py             # rutas, parámetros y logging
+│   └── router/               # subsistema del router (solo lectura por defecto)
+├── scripts/
+│   ├── generar_dataset.py    # genera data/dataset.csv
+│   ├── entrenar.py           # entrena y muestra métricas
+│   ├── registrar_medicion.py # agrega una medición real etiquetada
+│   ├── analizar_router.py    # exploración manual del router
+│   ├── demo_simulacion.py    # demostración segura con un router simulado
+│   ├── probar_mw306r.py      # primera prueba controlada contra el MW306R real
+│   └── limpiar_har.py        # limpia capturas HAR del panel (borra claves, PIN, sesiones)
+├── tests/                    # pruebas automáticas
 ├── requirements.txt
-├── .gitignore
-├── .env.example
-└── README.md
+└── .env.example
 ```
 
-### Descripción de las carpetas
+## Pruebas
 
-**`data/`**
-Contendrá los datos utilizados para entrenar y probar el modelo de aprendizaje automático.
-
-**`models/`**
-Contendrá los modelos de Machine Learning entrenados.
-
-**`src/`**
-Contendrá los módulos principales del sistema.
-
-**`tests/`**
-Contendrá las pruebas utilizadas para verificar el funcionamiento del sistema.
-
-**`app.py`**
-Será el punto de entrada de la aplicación.
-
-**`requirements.txt`**
-Contendrá las librerías necesarias para ejecutar el proyecto.
-
-**`.env.example`**
-Servirá como ejemplo para configurar variables de entorno sin publicar información sensible.
-
----
-
-# Seguridad
-
-La seguridad será considerada durante todo el desarrollo del proyecto.
-
-Se contemplarán principalmente:
-
-* Validación de entradas del usuario.
-* Protección de información sensible.
-* Uso de variables de entorno.
-* No almacenar credenciales directamente en el código.
-* Control de las acciones que puede ejecutar el sistema.
-* Evitar la ejecución de comandos arbitrarios introducidos por el usuario.
-* Validación de los datos utilizados por el sistema.
-* Registro de errores y eventos importantes.
-* Separación entre las funciones de diagnóstico y las funciones que puedan modificar la configuración de red.
-
-El sistema estará diseñado principalmente para **observar, analizar y diagnosticar** la red. Las acciones que puedan modificar configuraciones deberán estar controladas explícitamente.
-
----
-
-# Alcance inicial (MVP)
-
-La primera versión funcional del proyecto permitirá:
-
-1. Recibir consultas del usuario mediante lenguaje natural.
-2. Identificar la intención de la consulta.
-3. Realizar pruebas básicas de conectividad.
-4. Obtener información relacionada con la red.
-5. Medir parámetros como latencia y pérdida de paquetes.
-6. Procesar los datos obtenidos.
-7. Utilizar un modelo de Machine Learning para clasificar posibles problemas.
-8. Generar un diagnóstico.
-9. Mostrar recomendaciones básicas al usuario.
-10. Presentar los resultados mediante una interfaz sencilla.
-
----
-
-# Ejemplo de funcionamiento
-
-El usuario podría escribir:
-
-```text
-Mi Internet está muy lento y tengo mucho lag.
+```bash
+python -m unittest discover -s tests -t .   # o: pytest
 ```
 
-El sistema procesará la consulta y realizará las pruebas necesarias.
+Las pruebas no necesitan red ni router: usan salidas de ejemplo de `ping`, `route print`, `netsh`, etc.
 
-```text
-Consulta del usuario
-        ↓
-Identificación de intención
-        ↓
-Pruebas de red
-        ↓
-Obtención de datos
-        ↓
-Modelo de Machine Learning
-        ↓
-Clasificación del problema
-        ↓
-Diagnóstico
-        ↓
-Recomendaciones
+## Sobre el modelo de ML (importante para la presentación)
+
+- El dataset base es **sintético**: se genera con distribuciones que se solapan entre clases (`scripts/generar_dataset.py`), así el modelo aprende fronteras estadísticas y no copia umbrales exactos.
+- La precisión que reporta `scripts.entrenar` (~95%) mide qué tan bien reproduce **ese** dataset, no cómo se comportará en cualquier red del mundo real.
+- Para adaptarlo a tu red: provoca situaciones reales (alejarte del router, hacer una descarga grande, desconectar el cable) y registra cada una con `python -m scripts.registrar_medicion`. Con 50–100 mediciones reales, reentrena con `python -m scripts.entrenar`.
+- Se usa un árbol de decisión porque es **explicable**: `scripts.entrenar` imprime las reglas que aprendió.
+- Clases: `estable`, `latencia_moderada`, `latencia_alta`, `perdida_paquetes`, `inestable`, `red_local_degradada`. Las situaciones sin conexión (`sin_internet`, `sin_red_local`) se resuelven con reglas, porque sin respuesta no hay datos que clasificar.
+
+## Administración del router
+
+HERMES puede modificar un router **solo si el usuario aporta su propio usuario y contraseña de administrador** y existe un adaptador para ese modelo. Todo cambio pasa por `GuardianRouter`:
+
+| Modo | Comportamiento |
+|---|---|
+| `sugerir` | Describe lo que haría; no ejecuta nada |
+| `confirmar` | Pregunta al usuario antes de cada cambio |
+| `automatico` | Ejecuta sin preguntar **solo** cambiar canal y limitar velocidad. Bloquear y reiniciar siempre piden confirmación |
+
+Protecciones fijas: nunca bloquea ni limita **este equipo** ni **el propio router**; no bloquea a la mitad o más de la red; máximo 4 cambios por hora; guarda el estado previo, comprueba que la red sigue funcionando tras el cambio y, si no, **lo revierte solo**; cada acción queda en `logs/hermes.log`. Cambiar el canal puede desconectar un instante a quien esté por Wi-Fi: la primera prueba real conviene hacerla **por cable**.
+
+**Adaptadores.** HERMES identifica el router por su portada/puertos y elige el adaptador registrado en `src/router/registro.py`. Hoy existen: `simulado` (pruebas y demostraciones), `mercusys_mw306r` (**en construcción**, ver abajo) y la plantilla `adapters/plantilla.py` para crear otros.
+
+**Mercusys MW306R (V1).** El protocolo del panel se dedujo de capturas reales (`scripts/limpiar_har.py` las limpia antes de compartirlas). Implementado y probado con un router simulado: inicio de sesión, listar clientes, leer/cambiar el canal (con verificación y reversión) y bloquear/desbloquear. Pendientes: el módulo QoS (límite por dispositivo, que el menú del panel sí tiene) y el reinicio. **Nada se ha ejecutado todavía contra el router real:** la primera prueba se hace con `python -m scripts.probar_mw306r 192.168.1.1` (solo lectura por defecto; conecta la PC por cable). Ojo: en este modelo el `id` de cada petición es la contraseña cifrada de forma reversible y viaja por HTTP; úsalo solo en una red propia y no reutilices esa contraseña en otros sitios.
+
+```bash
+python -m scripts.demo_simulacion   # ver los modos, protecciones y reversión sin tocar nada real
 ```
 
-El resultado podría ser:
+## Seguridad
 
-```text
-Diagnóstico:
+- Los comandos del sistema se ejecutan **sin shell** y con tiempo límite; el host del ping se valida (no puede ser una opción como `-f`).
+- Las consultas del usuario se limpian (caracteres de control, longitud máxima).
+- HERMES solo sondea **IPs privadas** (tu red local), nunca equipos de Internet.
+- El subsistema del router está dividido: `RouterReader` (solo lectura, lo que usa el diagnóstico) y `RouterController` (puede modificar). Las acciones que modifican pasan por `RouterManager.ejecutar_accion()`: validan el valor, exigen que la capacidad esté **confirmada**, piden confirmación al usuario y quedan registradas en `logs/hermes.log`.
+- La contraseña del router se pide con `getpass` (no se muestra), vive solo en memoria, **se oculta de los logs** y solo se guarda en el llavero del sistema si el usuario lo decide (`keyring`, opcional). Si el router solo ofrece HTTP, HERMES avisa de que las credenciales viajan sin cifrar por la red local.
+- No hay credenciales en el código; los parámetros se leen del entorno (ver `.env.example`).
+- Usa HERMES únicamente en redes propias o con autorización.
 
-Se detectó una latencia elevada durante las pruebas
-realizadas.
+## Limitaciones conocidas
 
-Posible causa:
-Problemas de conectividad o congestión de la red.
+- El adaptador del MW306R está probado solo contra un router simulado; falta validarlo en el equipo real, y faltan QoS y reinicio.
+- El listado de dispositivos cuenta dispositivos, no personas; los móviles con MAC privada pueden verse como otro dispositivo y bloquearlos por MAC puede no ser permanente. Para ver el fabricante de más equipos, descarga `oui.csv` del IEEE y guárdalo en `data/`.
+- Se asume una subred /24 para el escaneo.
+- El escaneo Wi-Fi solo cubre 2.4 GHz y funciona en Windows y Linux (macOS no soportado).
+- En Windows 11 el escaneo Wi-Fi puede requerir el permiso de ubicación.
+- El diagnóstico con ML necesita poder medir el router (gateway); si no se detecta, se usan reglas.
 
-Recomendaciones:
-- Verificar la conexión con el router.
-- Realizar una nueva prueba de latencia.
-- Comprobar si otros dispositivos presentan el mismo problema.
-```
+## Equipo
 
----
+| Integrante | Área principal | Responsabilidades |
+|---|---|---|
+| jose | IA + Backend | Machine Learning, NLP, lógica de diagnóstico, módulos principales |
+| V | Redes + Interfaz | Datos de red, pruebas de conectividad, interfaz, integración y pruebas |
 
-# Organización del equipo
+Ambos participan en integración, pruebas, documentación, revisión de código, seguridad, Git/GitHub y presentación.
+fg
+## Propósito académico
 
-El proyecto será desarrollado por dos integrantes. Las responsabilidades se dividirán en dos áreas principales para mantener una distribución equilibrada del trabajo.
-
-| Integrante   | Área principal   | Responsabilidades                                                                                                        |
-| ------------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| jose         | IA + Backend     | Machine Learning, procesamiento de lenguaje natural, lógica de diagnóstico y desarrollo de módulos principales en Python |
-| V            | Redes + Interfaz | Recolección de datos de red, pruebas de conectividad, interfaz de usuario, integración y pruebas                         |
-
-Aunque cada integrante tendrá un área principal, ambos participarán en:
-
-* Integración de los módulos.
-* Pruebas del sistema.
-* Documentación.
-* Revisión del código.
-* Seguridad.
-* Control de versiones mediante Git y GitHub.
-* Preparación de la presentación del proyecto.
-
-Los nombres y responsabilidades específicas podrán actualizarse posteriormente.
-
----
-
-# Metodología
-
-El proyecto será desarrollado de manera incremental, comenzando por un MVP funcional y agregando nuevas características conforme avance el desarrollo.
-
-El código será administrado mediante **Git y GitHub**, utilizando repositorios, commits y ramas para mantener un historial organizado del proyecto.
-
-El desarrollo se dividirá en diferentes etapas:
-
-1. Análisis del problema.
-2. Diseño del sistema.
-3. Preparación de datos.
-4. Desarrollo del módulo de red.
-5. Desarrollo del procesamiento de lenguaje natural.
-6. Entrenamiento del modelo de Machine Learning.
-7. Integración de los componentes.
-8. Desarrollo de la interfaz.
-9. Pruebas.
-10. Documentación.
-11. Presentación del proyecto.
-
----
-
-# Propósito académico
-
-HERMES busca demostrar la aplicación práctica de conceptos de Inteligencia Artificial y aprendizaje automático en un problema relacionado con la administración y diagnóstico de redes.
-
-El proyecto integra diferentes áreas de desarrollo de software para construir una solución funcional capaz de interpretar consultas en lenguaje natural, analizar información de una red y utilizar modelos de Inteligencia Artificial para apoyar el proceso de diagnóstico.
-
-Además, el proyecto permitirá aplicar conocimientos de programación en Python, procesamiento de datos, Machine Learning, redes de computadoras, desarrollo de interfaces, pruebas y control de versiones mediante Git y GitHub.
+HERMES aplica IA y aprendizaje automático a un problema real de administración de redes, integrando Python, procesamiento de datos, Machine Learning, NLP, redes, interfaces, pruebas y control de versiones.
